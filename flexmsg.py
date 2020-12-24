@@ -1,7 +1,7 @@
 from linebot.models import (
     TextSendMessage, MessageAction, URIAction,
     PostbackAction, DatetimePickerAction,
-    CameraAction, CameraRollAction, LocationAction,
+    CameraAction, CameraRollAction,
     CarouselTemplate, CarouselColumn, PostbackEvent, FillerComponent,
     FlexSendMessage, BubbleContainer, ImageComponent, BoxComponent,
     TextComponent, IconComponent, ButtonComponent,
@@ -27,19 +27,24 @@ def flex_prescription(i,progress):
         msg = last_refill_number(progress)
     elif i == 5 or i == "last_refill_date":
         msg = last_refill_date(progress)
+    elif i == "prescription_category":
+        msg = drug_refill_calculation
     else:
-        msg = TextSendMessage(text = "FlexMessage Bug 爆發中...")
+        msg = TextSendMessage(text = "FlexMessage Bug")
     return msg
 
 
 drug_refill_calculation = TextSendMessage(
-    text = "請協助回答以下問題",
+    text = "請確認您的處方箋種類",
     quick_reply = QuickReply(
         items = [
             QuickReplyButton(
-                action = MessageAction(label = "慢箋領藥時間查詢", text = "開始回答")
-                )
-            ]))
+                action=MessageAction(label="一般處方箋", text="一般處方箋")
+            ),
+            QuickReplyButton(
+                action=MessageAction(label="慢性處方箋", text="慢性處方箋")
+            )
+        ]))
 
 
 def visit_date(progress):
@@ -281,13 +286,8 @@ def last_refill_date(progress):  # 上次(實際)領取第幾次
 
 
 def summary(data):
-    if data[12]=='無':
-        act=None
-        col="#444444"
-    else:
-        act=URIAction(uri = f"{data[12]}")
-        col="#229C8F"
-    sumer = FlexSendMessage(
+
+    summary = FlexSendMessage(
         alt_text = "請確認填寫資訊",
         contents = BubbleContainer(
             direction = "ltr",
@@ -310,7 +310,7 @@ def summary(data):
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = f"活動類型 {data[1]}",
+                                text = f"看診日期 {data[2]}",
                                 size = "md",
                                 flex = 10,
                                 align = "start"
@@ -330,7 +330,7 @@ def summary(data):
                                 gravity = "top",
                                 weight = "bold",
                                 action = MessageAction(
-                                    text = "activity_type"
+                                    text = "visit_date"
                                 )
                             )
                         ]
@@ -339,7 +339,7 @@ def summary(data):
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = f"活動名稱 {data[2]}",
+                                text = f"處方天數 {data[3]} 天",
                                 size = "md",
                                 flex = 10,
                                 align = "start"
@@ -359,7 +359,7 @@ def summary(data):
                                 gravity = "top",
                                 weight = "bold",
                                 action = MessageAction(
-                                    text = "activity_name"
+                                    text = "prescription_days"
                                 )
                             )
                         ]
@@ -368,7 +368,7 @@ def summary(data):
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = f"活動時間 {data[3]} {str(data[4])[:5]}",
+                                text = f"處方箋可領取次數 {data[4]} 次",
                                 size = "md",
                                 flex = 10,
                                 align = "start"
@@ -387,7 +387,7 @@ def summary(data):
                                 gravity = "top",
                                 weight = "bold",
                                 action = MessageAction(
-                                    text = "activity_date"
+                                    text = "total_refill_number"
                                 )
                             )
                         ]
@@ -396,37 +396,7 @@ def summary(data):
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = f"活動地點 {data[5]}",
-                                size = "md",
-                                flex = 10,
-                                wrap = True,
-                                align = "start"
-                            ),
-                            SeparatorComponent(
-                                color = "#FFFFFF",margin = "lg"
-                            )
-                        ]
-                    ),
-                    BoxComponent(
-                        layout = "horizontal",
-                        contents = [
-                            TextComponent(
-                                text = "修改",
-                                size = "md",
-                                align = "end",
-                                gravity = "top",
-                                weight = "bold",
-                                action = MessageAction(
-                                    text = "location"
-                                )
-                            )
-                        ]
-                    ),
-                    BoxComponent(
-                        layout = "horizontal",
-                        contents = [
-                            TextComponent(
-                                text = f"活動人數 {data[8]}",
+                                text = f"已領取次數 {data[5]} 次",
                                 size = "md",
                                 flex = 10,
                                 align = "start"
@@ -446,7 +416,7 @@ def summary(data):
                                 gravity = "top",
                                 weight = "bold",
                                 action = MessageAction(
-                                    text = "people"
+                                    text = "已領取次數"
                                 )
                             )
                         ]
@@ -455,7 +425,7 @@ def summary(data):
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = f"活動費用 {data[9]}",
+                                text = f"上次領藥日期 {data[6]}",
                                 size = "md",
                                 flex = 10,
                                 align = "start"
@@ -475,97 +445,7 @@ def summary(data):
                                 gravity = "top",
                                 weight = "bold",
                                 action = MessageAction(
-                                    text = "cost"
-                                )
-                            )
-                        ]
-                    ),
-                    BoxComponent(
-                        layout = "horizontal",
-                        contents = [
-                            TextComponent(
-                                text = f"報名截止日 {data[10]}",
-                                size = "md",
-                                flex = 10,
-                                align = "start"
-                            ),
-                            SeparatorComponent(
-                                color = "#FFFFFF",margin = "lg"
-                            )
-                        ]
-                    ),
-                    BoxComponent(
-                        layout = "horizontal",
-                        contents = [
-                            TextComponent(
-                                text = "修改",
-                                size = "md",
-                                align = "end",
-                                gravity = "top",
-                                weight = "bold",
-                                action = MessageAction(
-                                    text = "due_date"
-                                )
-                            )
-                        ]
-                    ),
-                    BoxComponent(
-                        layout = "horizontal",
-                        contents = [
-                            TextComponent(
-                                text = f"活動敘述 {data[11]}",
-                                size = "md",
-                                flex = 10,
-                                align = "start"
-                            ),
-                            SeparatorComponent(
-                                color = "#FFFFFF",margin = "lg"
-                            )
-                        ]
-                    ),
-                    BoxComponent(
-                        layout = "horizontal",
-                        contents = [
-                            TextComponent(
-                                text = "修改",
-                                size = "md",
-                                align = "end",
-                                gravity = "top",
-                                weight = "bold",
-                                action = MessageAction(
-                                    text = "description"
-                                )
-                            )
-                        ]
-                    ),
-                    BoxComponent(
-                        layout = "horizontal",
-                        contents = [
-                            TextComponent(
-                                text = f"活動照片 {data[12]}",
-                                size = "md",
-                                flex = 10,
-                                align = "start",
-                                action= act,
-                                wrap = True,
-                                color = f"{col}"
-                            ),
-                            SeparatorComponent(
-                                color = "#FFFFFF",margin = "lg"
-                            )
-                        ]
-                    ),
-                    BoxComponent(
-                        layout = "horizontal",
-                        contents = [
-                            TextComponent(
-                                text = "修改",
-                                size = "md",
-                                align = "end",
-                                gravity = "top",
-                                weight = "bold",
-                                action = MessageAction(
-                                    text = "photo"
+                                    text = "last_refill_date"
                                 )
                             )
                         ]
@@ -602,85 +482,101 @@ def summary(data):
             )
         )
     )
-    return sumer
+    return summary
 
 
-# def drug_refill_cal(prescription_days,total_refill_number,last_refill_number,last_refill_date):
-#     datetime_dt = datetime.datetime.today()  # 獲得當地時間
-#     today_dt = datetime_dt.date()  # 最小日期顯示到日
+# def drug_refill_cal(data):
+#     today_dt = data[8]
+#     visit_date = data[2]
+#     prescription_days = int(data[3])
+#     total_refill_number = int(data[4])
+#     last_refill_number = int(data[5])
+#     last_refill_date = data[6]
 #
 #     time_delta_all = datetime.timedelta(days=int(prescription_days * total_refill_number))
 #     valid_dt = visit_date + time_delta_all  # 處方箋的有效期限
 #
-#     time_delta = datetime.timedelta(days = prescription_days)
+#     time_delta = datetime.timedelta(days=prescription_days)
 #     second_refill_start_dt = last_refill_date + time_delta - datetime.timedelta(days=int(10))  # 第二次領藥起始日
 #     second_refill_end_dt = last_refill_date + time_delta  # 第二次領藥截止日
 #
-#
 #     if today_dt > valid_dt:
-#         print('處方已過期，請重新掛號看診，領取新的處方箋')
+#         result = ('處方已過期，請重新掛號看診，領取新的處方箋')
+#
 #     elif total_refill_number == 2:  # 共 2 次
 #         if today_dt < second_refill_start_dt:
-#             print('現在還不能領喔！')
-#             print('建議領藥時間：{}年 {}月 {}日'.format(second_refill_start_dt.year, second_refill_start_dt.month,
-#                                               second_refill_start_dt.day) + '~{}年 {}月 {}日'.format(second_refill_end_dt.year,
-#                                                                                                 second_refill_end_dt.month,
-#                                                                                                 second_refill_end_dt.day))
-#         elif second_refill_start_dt <= today_dt <= second_refill_end_dt:
-#             print('現在可以領！請您在 {}年 {}月 {}日前領取。'.format(second_refill_end_dt.year, second_refill_end_dt.month,
-#                                                      second_refill_end_dt.day))
-#         elif second_refill_end_dt <= today_dt <= valid_dt:
-#             print('咦！請您確認是否按時服藥，並盡快領藥。務必在 {}年 {}月 {}日前領取。'.format(valid_dt.year, valid_dt.month, valid_dt.day))
-#         elif last_refill_number == 2:  # 2 times
-#             print('所有處方已領取完。請重新掛號看診。')
-#     elif total_refill_number == 3:  # 共 3 次
-#         if last_refill_number == 1:  # 只領第一次
-#             if today_dt < second_refill_start_dt:
-#                 print('現在還不能領喔！')
-#                 print('建議領藥時間：{}年 {}月 {}日'.format(second_refill_start_dt.year, second_refill_start_dt.month,
-#                                                   second_refill_start_dt.day) + '~{}年 {}月 {}日'.format(second_refill_end_dt.year,
-#                                                                                                     second_refill_end_dt.month,
-#                                                                                                     second_refill_end_dt.day))
+#             result = ('現在還不能領喔！''建議領藥時間：{}年 {}月 {}日'.format(second_refill_start_dt.year, second_refill_start_dt.month,
+#                                                             second_refill_start_dt.day) + '~{}年 {}月 {}日'.format(
+#                 second_refill_end_dt.year,
+#                 second_refill_end_dt.month,
+#                 second_refill_end_dt.day)))
+#
 #             elif second_refill_start_dt <= today_dt <= second_refill_end_dt:
-#                 print('現在可以領！請您在' + second_refill_end_dt + '前領取。')
+#             result = ('現在可以領！請您在 {}年 {}月 {}日前領取。'.format(second_refill_end_dt.year, second_refill_end_dt.month,
+#                                                          second_refill_end_dt.day))
+#             elif second_refill_end_dt <= today_dt <= valid_dt:
+#             result = ('咦！請您確認是否按時服藥，並盡快領藥。務必在 {}年 {}月 {}日前領取。'.format(valid_dt.year, valid_dt.month, valid_dt.day))
+#             elif last_refill_number == 2:  # 2 times
+#             result = ('所有處方已領取完。請重新掛號看診。')
+#
+#             elif total_refill_number == 3:  # 共 3 次
+#             if last_refill_number == 1:  # 只領第一次
+#                 if
+#             today_dt < second_refill_start_dt:
+#             resturn = ('現在還不能領喔！' + '建議領藥時間：{}年 {}月 {}日'.format(second_refill_start_dt.year,
+#                                                                 second_refill_start_dt.month,
+#                                                                 second_refill_start_dt.day) + '~{}年 {}月 {}日'.format(
+#                 second_refill_end_dt.year,
+#                 second_refill_end_dt.month,
+#                 second_refill_end_dt.day))
+#             elif second_refill_start_dt <= today_dt <= second_refill_end_dt:
+#             result = ('現在可以領！請您在' + second_refill_end_dt + '前領取。')
 #
 #             else:
-#                 print('咦！請您確認是否按時服藥，並盡快領藥。')
-#         elif last_refill_number == 2:  # 已領 2次
-#             third_refill_start_dt = last_refill_date + time_delta - datetime.timedelta(days = int(10))  # 第三次領藥起始日
+#             result = ('咦！請您確認是否按時服藥，並盡快領藥。')
+#
+#             elif last_refill_number == 2:  # 已領 2次
+#             third_refill_start_dt = last_refill_date + time_delta - datetime.timedelta(days=int(10))  # 第三次領藥起始日
 #             third_refill_end_dt = last_refill_date + time_delta  # 第三次領藥截止日
 #             if today_dt < third_refill_start_dt:
-#                 print('現在還不能領喔！')
-#                 print('建議領藥時間：{}年 {}月 {}日'.format(third_refill_start_dt.year, third_refill_start_dt.month,
-#                                                   third_refill_start_dt.day) + '~{}年 {}月 {}日'.format(third_refill_end_dt.year,
-#                                                                                                    third_refill_end_dt.month,
-#                                                                                                    third_refill_end_dt.day))
+#                 result = ('現在還不能領喔！' + '建議領藥時間：{}年 {}月 {}日'.format(third_refill_start_dt.year,
+#                                                                    third_refill_start_dt.month,
+#                                                                    third_refill_start_dt.day) + '~{}年 {}月 {}日'.format(
+#                     third_refill_end_dt.year,
+#                     third_refill_end_dt.month,
+#                     third_refill_end_dt.day))
 #             elif third_refill_start_dt <= today_dt <= third_refill_end_dt:
-#                 print('現在可以領！請您在請您在 {}年 {}月 {}日前領取。'.format(third_refill_end_dt.year, third_refill_end_dt.month,
-#                                                             third_refill_end_dt.day))
+#                 result = ('現在可以領！請您在請您在 {}年 {}月 {}日前領取。'.format(third_refill_end_dt.year, third_refill_end_dt.month,
+#                                                                 third_refill_end_dt.day))
 #             else:
-#                 print('咦！請您確認是否按時服藥，並盡快領藥。務必在 {}年 {}月 {}日前領取。'.format(valid_dt.year, valid_dt.month, valid_dt.day))
-#         elif last_refill_number == 3:  # 3 times
-#             print('所有處方已領取完。請重新掛號看診。')
+#                 result = ('咦！請您確認是否按時服藥，並盡快領藥。務必在 {}年 {}月 {}日前領取。'.format(valid_dt.year, valid_dt.month, valid_dt.day))
+#             elif last_refill_number == 3:
+#             result = ('所有處方已領取完。請重新掛號看診。')
+#
+#     return result
 
 
 def flex_drug(j,progress):
     if j == 1 or j == "drug_name":
         drug_info = drug_name(progress)
-    elif j == 3 or j == "drug_prescription_date":
+    elif j == 4  or j == "prescription_date":
         drug_info = prescription_date(progress)
-    elif j == 4 or j == "duration":
+    elif j == 5 or j == "duration":
         drug_info = duration(progress)
-    elif j == 5 or j == "drug_amount":
+    elif j == 2 or j == "drug_amount":
         drug_info = drug_amount(progress)
-    elif j == 6 or j == "frequency":
+    elif j == 3 or j == "frequency":
         drug_info = drug_frequency(progress)
-    elif j == 7 or j == "description":
+    elif j == 7 or j == "generic_name":
+        drug_info = generic_name
+    elif j == 11 or j== 8 or j == "description":
         drug_info = description
-    elif j == 8 or j == "photo":
+    elif j == 10 or j == "photo":
         drug_info = photo
+    elif j == "drug_category":
+        drug_info = drug_category
     else:
-        drug_info = TextSendMessage(text = "FlexMessage Bug 爆發中...")
+        drug_info = TextSendMessage(text = "FlexMessage Bug !!!")
     return drug_info
 
 
@@ -747,16 +643,17 @@ def drug_name(progress):
     )
     return drug_name
 
+
 def prescription_date(progress):
     prescription_date = FlexSendMessage(
-        alt_text = "請挑選藥品處方/取得日期",
+        alt_text = "藥品處方/取得日期",
         contents = BubbleContainer(
             direction = "ltr",
             body = BoxComponent(
                 layout = "vertical",
                 contents =[
                     TextComponent(
-                        text = "請選擇藥品處方/取得日期",
+                        text = "藥品處方/取得日期",
                         size = "lg",
                         align = "center",
                         weight = "bold"
@@ -768,7 +665,7 @@ def prescription_date(progress):
               contents = [
                   BoxComponent(layout = "vertical",
                                  margin = "md",
-                                 contents = [TextComponent(text = f"{progress[3]} / {progress[0]} ", weight = "bold", size = "md"),
+                                 contents = [TextComponent(text = f"{progress[4]} / {progress[0]} ", weight = "bold", size = "md"),
                                              BoxComponent(layout = "vertical",
                                                           margin = "md",
                                                           contents = [
@@ -776,7 +673,7 @@ def prescription_date(progress):
                                                                            contents = [FillerComponent()]
                                                                           )
                                                           ],
-                                                          width = f"{int(progress[3] / progress[0] * 100 + 0.5 )}%",
+                                                          width = f"{int(progress[4] / progress[0] * 100 + 0.5 )}%",
                                                           background_color = "#3DE1D0",
                                                           height = "6px"
                                                          )
@@ -790,7 +687,7 @@ def prescription_date(progress):
                                          DatetimePickerAction(
                                              label = "點我選日期",
                                              data = "prescription_date",
-                                             mode = "date"
+                                             mode = "date",
                                          ),
                                          height = "sm",
                                          margin = "none",
@@ -859,7 +756,7 @@ def drug_amount(progress):
                     BoxComponent(layout = "baseline",
                                  margin = "lg",
                                  contents = [
-                                     TextComponent(text = "服用劑量格式：數量/單位(錠、顆、mg或g...)",
+                                     TextComponent(text = "格式：數量/單位(+備註)",
                                                    size = "md",
                                                    flex = 0,
                                                    color = "#666666"
@@ -872,7 +769,7 @@ def drug_amount(progress):
             footer=BoxComponent(
                 layout = "vertical",
                 margin = "md",
-                contents = [TextComponent(text = f"{progress[5]} / {progress[0]} ", weight = "bold", size = "md"),
+                contents = [TextComponent(text = f"{progress[2]} / {progress[0]} ", weight = "bold", size = "md"),
                             BoxComponent(layout = "vertical",
                                          margin = "md",
                                          contents = [
@@ -880,7 +777,7 @@ def drug_amount(progress):
                                                           contents = [FillerComponent()]
                                                          )
                                          ],
-                                         width = f"{int(progress[5] / progress[0] * 100 + 0.5 )}%",
+                                         width = f"{int(progress[2] / progress[0] * 100 + 0.5 )}%",
                                          background_color = "#3DE1D0",
                                          height = "6px"
                                         )
@@ -893,17 +790,17 @@ def drug_amount(progress):
 
 def drug_frequency(progress):
     drug_frequency = FlexSendMessage(
-        alt_text = "請填寫每次服用劑量",
+        alt_text = "請填寫每日服用頻率",
         contents = BubbleContainer(
             direction = "ltr",
             body = BoxComponent(
               layout = "vertical",
                 contents = [
-                    TextComponent(text = "請填寫每次服用劑量", weight = "bold", size = "lg", align = "center"),
+                    TextComponent(text = "請填寫每日服用頻率", weight = "bold", size = "lg", align = "center"),
                     BoxComponent(layout = "baseline",
                                  margin = "lg",
                                  contents = [
-                                     TextComponent(text = "服用劑量格式：數量/單位(錠、顆、mg或g...)",
+                                     TextComponent(text = "一天?/次(數字)",
                                                    size = "md",
                                                    flex = 0,
                                                    color = "#666666"
@@ -916,7 +813,7 @@ def drug_frequency(progress):
             footer=BoxComponent(
                 layout = "vertical",
                 margin = "md",
-                contents = [TextComponent(text = f"{progress[5]} / {progress[0]} ", weight = "bold", size = "md"),
+                contents = [TextComponent(text = f"{progress[3]} / {progress[0]} ", weight = "bold", size = "md"),
                             BoxComponent(layout = "vertical",
                                          margin = "md",
                                          contents = [
@@ -924,7 +821,7 @@ def drug_frequency(progress):
                                                           contents = [FillerComponent()]
                                                          )
                                          ],
-                                         width = f"{int(progress[5] / progress[0] * 100 + 0.5 )}%",
+                                         width = f"{int(progress[3] / progress[0] * 100 + 0.5 )}%",
                                          background_color = "#3DE1D0",
                                          height = "6px"
                                         )
@@ -935,6 +832,24 @@ def drug_frequency(progress):
     )
     return drug_frequency
 
+
+generic_name = FlexSendMessage(
+    alt_text = "請填寫藥品學名",
+    contents = BubbleContainer(
+        direction = "ltr",
+        body = BoxComponent(
+          layout = "vertical",
+          contents = [
+          TextComponent(
+              text = "請填寫藥品學名",
+              size = "lg",
+              align = "center",
+              weight = "bold"
+              )
+          ]
+        )
+    )
+)
 
 description = FlexSendMessage(
     alt_text = "請填寫藥品用途",
@@ -975,13 +890,19 @@ photo = FlexSendMessage(
 
 
 def drug_info_summary(data_2):
-    if data_2[8]=='無':
+    if data_2[10]=='無':
         act=None
         col="#444444"
     else:
-        act=URIAction(uri = f"{data_2[8]}")
+        act=URIAction(uri = f"{data_2[10]}")
         col="#229C8F"
-    summar = FlexSendMessage(
+        hero = ImageComponent(
+            size="full",
+            aspectMode="cover",
+            margin="none",
+            url=f"{data_2[10]}"
+        )
+    summary = FlexSendMessage(
         alt_text = "請確認藥品資訊",
         contents = BubbleContainer(
             direction = "ltr",
@@ -1062,7 +983,7 @@ def drug_info_summary(data_2):
                         layout="horizontal",
                         contents=[
                             TextComponent(
-                                text=f"學名 {data_2[3]}",
+                                text=f"學名 {data_2[8]}",
                                 size="md",
                                 flex=10,
                                 align="start"
@@ -1119,7 +1040,7 @@ def drug_info_summary(data_2):
                         layout="horizontal",
                         contents=[
                             TextComponent(
-                                text=f"每次服用劑量 {data_2[7]}",
+                                text=f"每次服用劑量 {data_2[3]}",
                                 size="md",
                                 flex=10,
                                 align="start"
@@ -1148,7 +1069,7 @@ def drug_info_summary(data_2):
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = f"服用頻次 {data_2[8]}",
+                                text = f"服用頻次 {data_2[4]}",
                                 size = "md",
                                 flex = 10,
                                 align = "start"
@@ -1203,10 +1124,39 @@ def drug_info_summary(data_2):
                         ]
                     ),
                     BoxComponent(
+                        layout="horizontal",
+                        contents=[
+                            TextComponent(
+                                text=f"預計服用天數 {data_2[6]}",
+                                size="md",
+                                flex=10,
+                                align="start"
+                            ),
+                            SeparatorComponent(
+                                color="#FFFFFF", margin="lg"
+                            )
+                        ]
+                    ),
+                    BoxComponent(
+                        layout="horizontal",
+                        contents=[
+                            TextComponent(
+                                text="修改",
+                                size="md",
+                                align="end",
+                                gravity="top",
+                                weight="bold",
+                                action=MessageAction(
+                                    text="duration"
+                                )
+                            )
+                        ]
+                    ),
+                    BoxComponent(
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = f"報名截止日 {data_2[10]}",
+                                text = f"服用結束日期 {data_2[7]}",
                                 size = "md",
                                 flex = 10,
                                 align = "start"
@@ -1220,22 +1170,17 @@ def drug_info_summary(data_2):
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = "修改",
+                                text = "-",
                                 size = "md",
-                                align = "end",
-                                gravity = "top",
-                                weight = "bold",
-                                action = MessageAction(
-                                    text = "due_date"
-                                )
-                            )
+                                align = "end"
+                            ),
                         ]
                     ),
                     BoxComponent(
                         layout = "horizontal",
                         contents = [
                             TextComponent(
-                                text = f"藥品照片 {data_2[11]}",
+                                text = f"藥品照片 {data_2[10]}",
                                 size = "md",
                                 flex = 10,
                                 align = "start",
@@ -1295,4 +1240,114 @@ def drug_info_summary(data_2):
             )
         )
     )
-    return summar
+    return summary
+
+
+# 我的開團列表
+def DrugList(data_2, _=0):
+    if _ == 0:
+        jj = 0
+    else:
+        jj = _ - 8
+
+    if data_2:
+
+        drug_lst = []
+
+        # row [document_no, drug_category, drug_name, drug_amount, drug_frequency, prescription_date, ...]
+        for j in range(_, len(data_2)):
+            print("j = ", j)
+            drug = f'''{{
+              "type": "box",
+              "layout": "horizontal",
+              "contents": [
+                {{
+                    "type": "box",
+                    "layout": "baseline",
+                    "contents": [
+                    {{
+                        "type": "icon",
+                        "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png",
+                        "flex": 1,
+                        "align": "start",
+                        "size": "sm"
+                     }}
+                     ]
+                }},
+                {{
+                  "type": "text",
+                  "text": "{data_2[j][2]}",
+                  "flex": 9,
+                  "size": "md",
+                  "align" :  "start",
+                  "color" : "#227C9D",
+                  "weight" :  "regular",
+                  "margin": "sm",
+                  "action": {{
+                  "type": "postback",
+                  "data": "藥品紀錄 {data_2[j][0]}"
+                  }}
+
+                }}
+              ]
+            }}'''
+            drug_lst.append(json.loads(drug))
+
+            if len(drug_lst) > 10:
+                break
+
+        index_drug = BubbleContainer(
+            size="kilo",
+            direction="ltr",
+            header=BoxComponent(
+                layout="horizontal",
+                contents=[
+                    TextComponent(
+                        text="我的藥品紀錄表",
+                        size="lg",
+                        weight="bold",
+                        color="#AAAAAA"
+                    )
+                ]
+            ),
+            body=BoxComponent(
+                layout="vertical",
+                spacing="md",
+                contents=drug_lst
+            ),
+            footer=BoxComponent(
+                layout="horizontal",
+                contents=[
+                    ButtonComponent(
+                        action=PostbackAction(
+                            label="上一頁",
+                            data=f"backward_drug_{jj}"
+                        ),
+                        height="sm",
+                        style="primary",
+                        color="#A7D5E1",
+                        gravity="bottom"
+                    ),
+                    SeparatorComponent(
+                        margin="sm",
+                        color="#FFFFFF"
+                    ),
+                    ButtonComponent(
+                        action=PostbackAction(
+                            label="下一頁",
+                            data=f"forward_drug_{j + 1}"
+                        ),
+                        height="sm",
+                        style="primary",
+                        color="#A7D5E1",
+                        gravity="bottom"
+                    )
+                ]
+            )
+        )
+
+    drug_info = FlexSendMessage(
+        alt_text = "我的藥品紀錄",
+        contents = index_drug
+    )
+    return drug_info
